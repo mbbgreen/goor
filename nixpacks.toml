@@ -1,16 +1,11 @@
 [phases.setup]
-nixPkgs = ["python310", "python310Packages.pip"]
+nixPkgs = ["python310"] # فقط پایتون را مشخص می کنیم. Nixpacks به طور خودکار pip را فراهم می کند.
 
 [phases.build]
-cmds = ["pip install -r requirements.txt"]
-
-[start]
-cmd = "python bot.py"
-
-[start]
-cmd = "TF_CPP_MIN_LOG_LEVEL=3 python bot.py"
-
-[phases.install]
 cmds = [
-    "pip install opencv-python-headless"  # به جای opencv-python معمولی
+    "pip install -r requirements.txt",
+    "pip install opencv-python-headless" # OpenCV رو هم اینجا نصب می کنیم
 ]
+
+[start]
+cmd = "TF_CPP_MIN_LOG_LEVEL=3 python bot.py" # فقط یک استارت دستور داریم. اگر نیاز بود می توانستیم دستورات را با && به هم وصل کنیم.
