@@ -1,18 +1,25 @@
 FROM ubuntu:latest
 
-# نصب Python، pip و curl
+# 1. نصب Python، pip و ابزار venv
 RUN apt-get update && \
-    apt-get install -y python3 python3-pip curl bash libgl1 libglib2.0-0 && \
+    apt-get install -y python3 python3-pip python3-venv bash libgl1 libglib2.0-0 libsm6 libxext6 && \
     rm -rf /var/lib/apt/lists/*
 
-# کپی کردن فایل requirements.txt و نصب پکیج‌ها
+# 2. ایجاد virtual environment و ارتقاء pip
+WORKDIR /app
 COPY requirements.txt /app/
-RUN pip3 install --no-cache-dir -r /app/requirements.txt
+RUN python3 -m venv /opt/venv && \
+    /opt/venv/bin/python -m pip install --upgrade pip setuptools wheel
 
-# کپی کردن سایر فایل‌ها
+# 3. نصب بسته‌ها در محیط مجازی
+RUN . /opt/venv/bin/activate && \
+    pip install --no-cache-dir -r requirements.txt
+
+# 4. کپی باقی پروژه
 COPY . /app
 
-WORKDIR /app
+# 5. تنظیم PATH برای استفاده از venv به‌صورت پیش‌فرض
+ENV PATH="/opt/venv/bin:$PATH"
 
-# اجرای فایل پایتون
-CMD ["python3", "main.py"]
+# 6. اجرای برنامه
+CMD ["python", "main.py"]
