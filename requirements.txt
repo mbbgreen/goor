@@ -1,0 +1,5 @@
+tensorflow
+numpy
+python-telegram-bot
+opencv-python
+pillow
