@@ -67,7 +67,7 @@ async def random_social_score(context: ContextTypes.DEFAULT_TYPE):
         except Exception as e:
             logger.error(f"Failed to send message: {e}")
     # schedule next run between 10 seconds and 1 minute
-    next_delay = random.randint(10, 60)
+    next_delay = random.randint(60, 1200)
     context.job_queue.run_once(random_social_score, when=next_delay)
     logger.info(f"Next score scheduled in {next_delay} seconds.")
 
