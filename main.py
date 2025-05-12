@@ -1,4 +1,7 @@
 # main.py
+# Requires extra dependency for JobQueue:
+# pip install "python-telegram-bot[job-queue]"
+
 import os
 import random
 import logging
@@ -36,6 +39,7 @@ logger.addHandler(buffer_handler)
 recent_messages = []
 MAX_MESSAGES = 200  # Max stored messages
 user_scores = defaultdict(int)  # accumulate scores per user_id
+job_started = False  # ensure /start runs only once
 
 async def capture_messages(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.effective_message
@@ -63,11 +67,16 @@ async def random_social_score(context: ContextTypes.DEFAULT_TYPE):
         except Exception as e:
             logger.error(f"Failed to send message: {e}")
     # schedule next run between 10 seconds and 1 minute
-    next_delay = random.randint(60, 900)
+    next_delay = random.randint(10, 60)
     context.job_queue.run_once(random_social_score, when=next_delay)
     logger.info(f"Next score scheduled in {next_delay} seconds.")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global job_started
+    if job_started:
+        # ignore subsequent /start commands
+        return
+    job_started = True
     await update.message.reply_text("ربات امتیاز اجتماعی فعال شد!")
     # seed initial message so we have at least one
     recent_messages.append(update.effective_message)
