@@ -62,15 +62,17 @@ async def random_social_score(context: ContextTypes.DEFAULT_TYPE):
             logger.info(f"Sent score {score} to {user_id}")
         except Exception as e:
             logger.error(f"Failed to send message: {e}")
-    # schedule next random run between 1 and 15 minutes
-    next_delay = random.randint(60, 900)
+    # schedule next run between 10 seconds and 1 minute
+    next_delay = random.randint(10, 60)
     context.job_queue.run_once(random_social_score, when=next_delay)
     logger.info(f"Next score scheduled in {next_delay} seconds.")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("ربات امتیاز اجتماعی فعال شد!")
-    # schedule first run
-    initial_delay = random.randint(10, 600)
+    # seed initial message so we have at least one
+    recent_messages.append(update.effective_message)
+    # schedule first run between 10 seconds and 1 minute
+    initial_delay = random.randint(10, 60)
     context.job_queue.run_once(random_social_score, when=initial_delay)
     logger.info(f"Bot started; first run in {initial_delay} seconds.")
 
