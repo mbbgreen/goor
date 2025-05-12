@@ -16,6 +16,7 @@ from telegram.ext import (
 
 # Enable logging with in-memory buffer
 log_buffer = deque(maxlen=100)
+
 class BufferHandler(logging.Handler):
     def emit(self, record):
         log_buffer.append(self.format(record))
@@ -32,7 +33,7 @@ logger = logging.getLogger(__name__)
 logger.addHandler(buffer_handler)
 
 # Store recent messages and user scores
-ecent_messages = []
+recent_messages = []
 MAX_MESSAGES = 200  # Max stored messages
 user_scores = defaultdict(int)  # accumulate scores per user_id
 
@@ -54,7 +55,7 @@ async def random_social_score(context: ContextTypes.DEFAULT_TYPE):
         reply_text = f"+{score} امتیاز اجتماعی 🇮🇷"
         try:
             await context.bot.send_message(
-                chat_id=message.chat_id,
+                chat_id=message.chat.id,
                 text=reply_text,
                 reply_to_message_id=message.message_id,
             )
@@ -71,7 +72,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # schedule first run
     initial_delay = random.randint(10, 600)
     context.job_queue.run_once(random_social_score, when=initial_delay)
-    logger.info(f'Bot started; first run in {initial_delay} seconds.')
+    logger.info(f"Bot started; first run in {initial_delay} seconds.")
 
 async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for job in context.job_queue.jobs():
@@ -91,10 +92,7 @@ async def show_logs(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text('هیچ لاگی وجود ندارد.')
         return
     logs = list(log_buffer)[-20:]
-    text = "```
-" + "
-".join(logs) + "
-```"
+    text = '```\n' + '\n'.join(logs) + '\n```'
     await update.message.reply_text(text, parse_mode='Markdown')
     logger.info('Logs sent to user.')
 
