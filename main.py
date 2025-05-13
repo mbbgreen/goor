@@ -1,114 +1,16 @@
 # main.py
-# Requires extra dependency for JobQueue:
-# pip install "python-telegram-bot[job-queue]"
-
-import os
-import random
+# Entry point: registers handlers and starts the bot
+import config
 import logging
-import config  # config.py should define BOT_TOKEN = '<your-token-here>'
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
+import positive
 
-from collections import deque, defaultdict
-from telegram import Update
-from telegram.ext import (
-    ApplicationBuilder,
-    CommandHandler,
-    MessageHandler,
-    ContextTypes,
-    filters,
-)
-
-# Enable logging with in-memory buffer
-log_buffer = deque(maxlen=100)
-
-class BufferHandler(logging.Handler):
-    def emit(self, record):
-        log_buffer.append(self.format(record))
-
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-buffer_handler = BufferHandler()
-buffer_handler.setFormatter(formatter)
-
+# Enable basic logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO,
 )
 logger = logging.getLogger(__name__)
-logger.addHandler(buffer_handler)
-
-# Store recent messages and user scores
-recent_messages = []
-MAX_MESSAGES = 200  # Max stored messages
-user_scores = defaultdict(int)  # accumulate scores per user_id
-job_started = False  # ensure /start runs only once
-
-async def capture_messages(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    message = update.effective_message
-    if message.chat.type in ['group', 'supergroup'] and message.text:
-        recent_messages.append(message)
-        if len(recent_messages) > MAX_MESSAGES:
-            recent_messages.pop(0)
-
-async def random_social_score(context: ContextTypes.DEFAULT_TYPE):
-    if not recent_messages:
-        logger.info('No messages stored yet.')
-    else:
-        message = random.choice(recent_messages)
-        score = random.randint(1, 10000)
-        user_id = message.from_user.id
-        user_scores[user_id] += score
-        reply_text = f"+{score} امتیاز اجتماعی 🇮🇷"
-        try:
-            await context.bot.send_message(
-                chat_id=message.chat.id,
-                text=reply_text,
-                reply_to_message_id=message.message_id,
-            )
-            logger.info(f"Sent score {score} to {user_id}")
-        except Exception as e:
-            logger.error(f"Failed to send message: {e}")
-    # schedule next run between 10 seconds and 1 minute
-    next_delay = random.randint(60, 1200)
-    context.job_queue.run_once(random_social_score, when=next_delay)
-    logger.info(f"Next score scheduled in {next_delay} seconds.")
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global job_started
-    if job_started:
-        # ignore subsequent /start commands
-        return
-    job_started = True
-    await update.message.reply_text("ربات امتیاز اجتماعی فعال شد!")
-    # seed initial message so we have at least one
-    recent_messages.append(update.effective_message)
-    # schedule first run between 10 seconds and 1 minute
-    initial_delay = random.randint(10, 60)
-    context.job_queue.run_once(random_social_score, when=initial_delay)
-    logger.info(f"Bot started; first run in {initial_delay} seconds.")
-
-async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    for job in context.job_queue.jobs():
-        job.schedule_removal()
-    await update.message.reply_text("ربات امتیاز اجتماعی متوقف شد!")
-    logger.info('Bot stopped and jobs removed.')
-
-async def show_score(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user
-    total = user_scores.get(user.id, 0)
-    text = f"امتیاز اجتماعی شما: {total} 🇮🇷"
-    await update.message.reply_text(text)
-    logger.info(f"Score shown for {user.id}: {total}")
-
-async def show_logs(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not log_buffer:
-        await update.message.reply_text('هیچ لاگی وجود ندارد.')
-        return
-    logs = list(log_buffer)[-20:]
-    text = '```\n' + '\n'.join(logs) + '\n```'
-    await update.message.reply_text(text, parse_mode='Markdown')
-    logger.info('Logs sent to user.')
-
-async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
-    logger.error(f"Update {update} caused error {context.error}")
 
 if __name__ == '__main__':
     token = getattr(config, 'BOT_TOKEN', None)
@@ -116,21 +18,19 @@ if __name__ == '__main__':
         logger.error("Please set BOT_TOKEN in config.py before running.")
         exit(1)
 
-    application = ApplicationBuilder().token(token).build()
+    app = ApplicationBuilder().token(token).build()
 
-    # Handlers
-    application.add_handler(CommandHandler('start', start))
-    application.add_handler(CommandHandler('stop', stop))
-    application.add_handler(CommandHandler('logs', show_logs))
-    # show score when user types "امتیاز"
-    application.add_handler(MessageHandler(filters.Regex(r'امتیاز'), show_score))
-    application.add_handler(
-        MessageHandler(filters.TEXT & ~filters.COMMAND, capture_messages)
-    )
-    application.add_error_handler(error_handler)
+    # Core handlers in positive module
+    app.add_handler(CommandHandler('start', positive.start))
+    app.add_handler(CommandHandler('stop', positive.stop))
+    app.add_handler(MessageHandler(filters.Regex(r'امتیاز'), positive.show_score))
+    app.add_handler(CommandHandler('logs', positive.show_logs))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, positive.capture_messages))
+    app.add_error_handler(positive.error_handler)
 
-    application.run_polling()
+    # Trigger initial scheduling if already started
+    if positive.job_started:
+        # reschedule on restart
+        positive.schedule_initial(app.job_queue)
 
-# config.py (new file)
-# --------------------
-# BOT_TOKEN = '123456789:ABCdefGhIjklMNopQRsTUVwxyz'
+    app.run_polling(
