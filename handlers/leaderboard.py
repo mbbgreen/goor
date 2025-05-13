@@ -35,6 +35,21 @@ def save_scores():
     except Exception as e:
         print(f"خطا در ذخیره‌سازی امتیازات: {e}")
 
+# تابع برای دریافت اطلاعات کاربر با استفاده از شناسه کاربر
+async def get_user_info(bot, user_id):
+    try:
+        chat_member = await bot.get_chat_member(chat_id=user_id, user_id=user_id)
+        user = chat_member.user
+        return {
+            'id': user.id,
+            'first_name': user.first_name,
+            'last_name': user.last_name if user.last_name else "",
+            'username': user.username if user.username else ""
+        }
+    except Exception as e:
+        print(f"خطا در دریافت اطلاعات کاربر {user_id}: {e}")
+        return None
+
 # تابع هندل پیام
 async def show_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not user_scores:
@@ -44,8 +59,27 @@ async def show_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # مرتب‌سازی امتیازها (بیشترین به کمترین)
     sorted_scores = sorted(user_scores.items(), key=lambda x: x[1], reverse=True)
     leaderboard_text = "🏆 لیست امتیازات:\n\n"
-    for i, (user_id, score) in enumerate(sorted_scores[:10], start=1):
-        user_mention = f"<a href='tg://user?id={user_id}'>کاربر {i}</a>"
+    
+    # حداکثر 10 نفر از لیست را نمایش می‌دهیم
+    top_users = sorted_scores[:10]
+    
+    for i, (user_id, score) in enumerate(top_users, start=1):
+        try:
+            # دریافت اطلاعات کاربر از تلگرام
+            chat = await context.bot.get_chat(user_id)
+            user_name = chat.first_name
+            if chat.last_name:
+                user_name += f" {chat.last_name}"
+            if chat.username:
+                user_mention = f"<a href='tg://user?id={user_id}'>{user_name} (@{chat.username})</a>"
+            else:
+                user_mention = f"<a href='tg://user?id={user_id}'>{user_name}</a>"
+                
+        except Exception as e:
+            # اگر نتوانستیم اطلاعات کاربر را دریافت کنیم، از یک نام عمومی استفاده می‌کنیم
+            print(f"خطا در دریافت اطلاعات کاربر: {e}")
+            user_mention = f"<a href='tg://user?id={user_id}'>کاربر {user_id}</a>"
+            
         leaderboard_text += f"{i}. {user_mention} — {score} امتیاز\n"
 
     await update.message.reply_text(leaderboard_text, parse_mode="HTML")
