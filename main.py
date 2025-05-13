@@ -39,6 +39,8 @@ if __name__ == '__main__':
     # Leaderboard handler (triggered by plain text)
     app.add_handler(MessageHandler(filters.TEXT & filters.Regex(r'^لیست امتیاز$'), leaderboard.show_leaderboard, group=4))
 
+    app.add_handler(get_leaderboard_handler(), group=4)
+
     app.add_error_handler(positive.error_handler)
 
     # Reschedule if already started
