@@ -1,3 +1,10 @@
+# main.py
+# Entry point: registers handlers and starts the bot
+import sys
+import os
+# Ensure current directory is in module search path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 import config
 import logging
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
