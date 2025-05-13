@@ -22,6 +22,7 @@ async def negative_score(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if uid not in user_scores:
         user_scores[uid] = 0
     
+    # اجازه می‌دهیم امتیاز منفی شود
     user_scores[uid] -= score
     reply = f"-{score} امتیاز اجتماعی 🇮🇷 (حال نکردم)"
     
@@ -33,9 +34,9 @@ async def negative_score(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logging.error(f"Failed negative send: {e}")
 
-# زمان‌بندی اولیه برای امتیاز منفی
+    # زمان‌بندی اولیه برای امتیاز منفی
 def schedule_initial_negative(job_queue):
-    delay = random.randint(10, 60)
+    delay = random.randint(60, 1200)  # زمان تصادفی بین 60 تا 1200 ثانیه
     job_queue.run_once(random_negative_score, when=delay)
     logging.info(f"امتیازدهی منفی اولیه در {delay} ثانیه دیگر انجام خواهد شد")
 
@@ -50,6 +51,7 @@ async def random_negative_score(context: ContextTypes.DEFAULT_TYPE):
         if uid not in user_scores:
             user_scores[uid] = 0
             
+        # اجازه می‌دهیم امتیاز منفی شود
         user_scores[uid] -= score
         reply = f"-{score} امتیاز اجتماعی 🇮🇷 (حال نکردم)"
         try:
@@ -63,7 +65,7 @@ async def random_negative_score(context: ContextTypes.DEFAULT_TYPE):
         logging.info('هیچ پیامی برای امتیازدهی منفی وجود ندارد')
     
     # زمان‌بندی اجرای بعدی
-    next_delay = random.randint(60, 1200)
+    next_delay = random.randint(10, 1200)  # زمان تصادفی بین ۱۰ تا ۱۲۰۰ ثانیه
     context.job_queue.run_once(random_negative_score, when=next_delay)
     logging.info(f"اجرای بعدی امتیاز منفی در {next_delay} ثانیه دیگر")
 
