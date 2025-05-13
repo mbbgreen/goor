@@ -61,7 +61,7 @@ async def random_social_score(context: ContextTypes.DEFAULT_TYPE):
         logging.info('هیچ پیامی برای امتیازدهی وجود ندارد')
     
     # زمان‌بندی اجرای بعدی
-    next_delay = random.randint(10, 60)
+    next_delay = random.randint(60, 1200)
     context.job_queue.run_once(random_social_score, when=next_delay)
     logging.info(f"اجرای بعدی در {next_delay} ثانیه دیگر")
 
