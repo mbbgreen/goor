@@ -35,7 +35,6 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, positive.capture_messages), group=2)
     
     # ثبت هندلر منفی
-    app.add_handler(MessageHandler(filters.Regex(r'^منفی$'), negative.negative_score), group=3)
     app.add_handler(CommandHandler('start_negative', negative.start_negative), group=3)
     app.add_handler(CommandHandler('stop_negative', negative.stop_negative), group=3)
     
