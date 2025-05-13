@@ -4,6 +4,7 @@ import config
 import logging
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
 import positive
+import negative
 
 # Enable basic logging
 logging.basicConfig(
@@ -26,11 +27,14 @@ if __name__ == '__main__':
     app.add_handler(MessageHandler(filters.Regex(r'امتیاز'), positive.show_score))
     app.add_handler(CommandHandler('logs', positive.show_logs))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, positive.capture_messages))
+
+    # Negative scoring handler
+    app.add_handler(CommandHandler('negative', negative.negative_score))
+
     app.add_error_handler(positive.error_handler)
 
     # Trigger initial scheduling if already started
     if positive.job_started:
-        # reschedule on restart
         positive.schedule_initial(app.job_queue)
 
-    app.run_polling(
+    app.run_polling()
