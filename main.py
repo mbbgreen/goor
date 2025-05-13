@@ -36,6 +36,8 @@ def main():
     
     # ثبت هندلر منفی
     app.add_handler(MessageHandler(filters.Regex(r'^منفی$'), negative.negative_score), group=3)
+    app.add_handler(CommandHandler('start_negative', negative.start_negative), group=3)
+    app.add_handler(CommandHandler('stop_negative', negative.stop_negative), group=3)
     
     # ثبت هندلرهای لیدربورد
     app.add_handler(MessageHandler(filters.Regex(r'^لیست امتیاز$'), leaderboard.show_leaderboard), group=4)
@@ -46,6 +48,10 @@ def main():
     # برنامه‌ریزی مجدد اگر قبلاً شروع شده باشد
     if positive.job_started:
         positive.schedule_initial(app.job_queue)
+    
+    # برنامه‌ریزی مجدد برای امتیاز منفی اگر فعال شده باشد
+    if hasattr(negative, 'negative_job_started') and negative.negative_job_started:
+        negative.schedule_initial_negative(app.job_queue)
     
     logger.info("ربات در حال اجراست...")
     app.run_polling()
