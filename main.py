@@ -43,15 +43,3 @@ if __name__ == '__main__':
 
     app.run_polling()
 
-# Make sure that your directory structure is:
-# project_root/
-# ├── main.py
-# ├── config.py
-# └── handlers/
-#     ├── __init__.py
-#     ├── positive.py
-#     ├── negative.py
-#     └── leaderboard.py
-
-# handlers/__init__.py
-# (empty or with initializations if needed)
