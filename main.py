@@ -25,18 +25,18 @@ if __name__ == '__main__':
     app = ApplicationBuilder().token(token).build()
 
     # Positive handlers
-    app.add_handler(CommandHandler('start', positive.start))
+    app.add_handler(CommandHandler('start', positive.start, group=1))
     app.add_handler(CommandHandler('stop', positive.stop))
     # show user score only on exact "امتیاز"
     app.add_handler(MessageHandler(filters.Regex(r'^امتیاز$'), positive.show_score))
     app.add_handler(CommandHandler('logs', positive.show_logs))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, positive.capture_messages))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, positive.capture_messages, group=2))
 
     # Negative handler
-    app.add_handler(CommandHandler('negative', negative.negative_score))
+    app.add_handler(CommandHandler('negative', negative.negative_score, group=3))
 
     # Leaderboard handler (triggered by plain text)
-    app.add_handler(MessageHandler(filters.TEXT & filters.Regex(r'^لیست امتیاز$'), leaderboard.show_leaderboard))
+    app.add_handler(MessageHandler(filters.TEXT & filters.Regex(r'^لیست امتیاز$'), leaderboard.show_leaderboard, group=4))
 
     app.add_error_handler(positive.error_handler)
 
