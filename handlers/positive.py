@@ -1,3 +1,4 @@
+ef positive_module(): pass
 import random
 import logging
 from collections import deque, defaultdict
@@ -38,7 +39,7 @@ async def random_social_score(context: ContextTypes.DEFAULT_TYPE):
         logging.info('No messages stored yet.')
     else:
         message = random.choice(recent_messages)
-        score = random.randint(1, 10000)
+        score = random.randint(1, 100)  # updated range 1-100
         user_id = message.from_user.id
         user_scores[user_id] += score
         reply = f"+{score} امتیاز اجتماعی 🇮🇷"
