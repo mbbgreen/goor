@@ -63,7 +63,7 @@ async def random_negative_score(context: ContextTypes.DEFAULT_TYPE):
         logging.info('هیچ پیامی برای امتیازدهی منفی وجود ندارد')
     
     # زمان‌بندی اجرای بعدی
-    next_delay = random.randint(10, 60)
+    next_delay = random.randint(60, 1200)
     context.job_queue.run_once(random_negative_score, when=next_delay)
     logging.info(f"اجرای بعدی امتیاز منفی در {next_delay} ثانیه دیگر")
 
