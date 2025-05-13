@@ -5,7 +5,7 @@ import logging
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
 
 # Import handler modules as a package
-from handlers import positive, negative, leaderboard
+from handlers from handlers import positive, negative, leaderboard
 
 # Enable basic logging
 logging.basicConfig(
@@ -43,3 +43,15 @@ if __name__ == '__main__':
 
     app.run_polling()
 
+# Make sure that your directory structure is:
+# project_root/
+# ├── main.py
+# ├── config.py
+# └── handlers/
+#     ├── __init__.py
+#     ├── positive.py
+#     ├── negative.py
+#     └── leaderboard.py
+
+# handlers/__init__.py
+# (empty or with initializations if needed)
