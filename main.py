@@ -8,6 +8,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, fil
 import handlers.positive as positive
 import handlers.negative as negative
 import handlers.leaderboard as leaderboard
+from handlers.leaderboard import get_leaderboard_handler
 
 # Enable basic logging
 logging.basicConfig(
