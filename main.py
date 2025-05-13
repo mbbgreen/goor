@@ -1,11 +1,11 @@
-# main.py
-# Entry point: registers handlers and starts the bot
 import config
 import logging
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
 
-# Import handler modules as a package
-from handlers import positive, negative, leaderboard
+# Import handler modules explicitly
+from handlers import positive
+from handlers import negative
+from handlers import leaderboard
 
 # Enable basic logging
 logging.basicConfig(
@@ -22,36 +22,24 @@ if __name__ == '__main__':
 
     app = ApplicationBuilder().token(token).build()
 
-    # Positive module handlers
+    # Positive handlers
     app.add_handler(CommandHandler('start', positive.start))
     app.add_handler(CommandHandler('stop', positive.stop))
     app.add_handler(MessageHandler(filters.Regex(r'امتیاز'), positive.show_score))
     app.add_handler(CommandHandler('logs', positive.show_logs))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, positive.capture_messages))
 
-    # Negative scoring handler
+    # Negative handler
     app.add_handler(CommandHandler('negative', negative.negative_score))
 
-    # Leaderboard text handler
+    # Leaderboard handler (triggered by plain text)
     app.add_handler(MessageHandler(filters.TEXT & filters.Regex(r'^لیست امتیاز$'), leaderboard.show_leaderboard))
 
     app.add_error_handler(positive.error_handler)
 
-    # Trigger initial scheduling if already started
+    # Reschedule if already started
     if positive.job_started:
         positive.schedule_initial(app.job_queue)
 
+    logger.info("Bot is running...")
     app.run_polling()
-
-# Make sure that your directory structure is:
-# project_root/
-# ├── main.py
-# ├── config.py
-# └── handlers/
-#     ├── __init__.py
-#     ├── positive.py
-#     ├── negative.py
-#     └── leaderboard.py
-
-# handlers/__init__.py
-# (empty or with initializations if needed)
