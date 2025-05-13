@@ -2,7 +2,9 @@
 
 import random
 import logging
-from collections import deque, defaultdict
+import json
+import os
+from collections import deque
 from telegram import Update
 from telegram.ext import ContextTypes
 from handlers.leaderboard import user_scores, save_scores
@@ -40,7 +42,12 @@ async def random_social_score(context: ContextTypes.DEFAULT_TYPE):
     if recent_messages:
         msg = random.choice(recent_messages)
         score = random.randint(1, 100)
-        uid = msg.from_user.id
+        uid = str(msg.from_user.id)  # تبدیل به رشته برای سازگاری با JSON
+        
+        # اگر کاربر امتیازی ندارد، صفر در نظر بگیر
+        if uid not in user_scores:
+            user_scores[uid] = 0
+            
         user_scores[uid] += score
         reply = f"+{score} امتیاز اجتماعی 🇮🇷"
         try:
@@ -95,7 +102,7 @@ async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # نمایش امتیاز کاربر
 async def show_score(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    uid = update.effective_user.id
+    uid = str(update.effective_user.id)  # تبدیل به رشته برای سازگاری با JSON
     total = user_scores.get(uid, 0)
     await update.message.reply_text(f"امتیاز اجتماعی شما: {total} 🇮🇷")
 
