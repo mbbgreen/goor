@@ -1,6 +1,3 @@
-# main.py
-# Entry point: registers handlers and starts the bot
-import config
 import logging
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
 
@@ -9,6 +6,8 @@ import handlers.positive as positive
 import handlers.negative as negative
 import handlers.leaderboard as leaderboard
 from handlers.leaderboard import get_leaderboard_handler
+
+import config  # فرض بر اینه config.py موجوده
 
 # Enable basic logging
 logging.basicConfig(
@@ -26,21 +25,20 @@ if __name__ == '__main__':
     app = ApplicationBuilder().token(token).build()
 
     # Positive handlers
-    app.add_handler(CommandHandler('start', positive.start, group=0))
-    app.add_handler(CommandHandler('stop', positive.stop, group=1))
-    # show user score only on exact "امتیاز"
-    app.add_handler(MessageHandler(filters.Regex(r'^امتیاز$'), positive.show_score, group=2))
-    app.add_handler(CommandHandler('logs', positive.show_logs, group=2))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, positive.capture_messages, group=2))
+    app.add_handler(CommandHandler('start', positive.start), group=0)
+    app.add_handler(CommandHandler('stop', positive.stop), group=1)
+    app.add_handler(MessageHandler(filters.Regex(r'^امتیاز$'), positive.show_score), group=2)
+    app.add_handler(CommandHandler('logs', positive.show_logs), group=2)
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, positive.capture_messages), group=2)
 
     # Negative handler
-    app.add_handler(CommandHandler('negative', negative.negative_score, group=3))
+    app.add_handler(CommandHandler('negative', negative.negative_score), group=3)
 
-    # Leaderboard handler (triggered by plain text)
-    app.add_handler(MessageHandler(filters.TEXT & filters.Regex(r'^لیست امتیاز$'), leaderboard.show_leaderboard, group=4))
-
+    # Leaderboard handlers
+    app.add_handler(MessageHandler(filters.TEXT & filters.Regex(r'^لیست امتیاز$'), leaderboard.show_leaderboard), group=4)
     app.add_handler(get_leaderboard_handler(), group=4)
 
+    # Error handler
     app.add_error_handler(positive.error_handler)
 
     # Reschedule if already started
