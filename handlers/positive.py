@@ -25,7 +25,7 @@ def setup_buffer_handler():
 
 # زمان‌بندی اولیه
 def schedule_initial(job_queue):
-    delay = random.randint(10, 60)
+    delay = random.randint(60, 1200)
     job_queue.run_once(random_social_score, when=delay)
     logging.info(f"امتیازدهی اولیه در {delay} ثانیه دیگر انجام خواهد شد")
 
