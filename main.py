@@ -5,7 +5,7 @@ import logging
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
 
 # Import handler modules as a package
-from handlers from handlers import positive, negative, leaderboard
+from handlers import positive, negative, leaderboard
 
 # Enable basic logging
 logging.basicConfig(
