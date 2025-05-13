@@ -36,7 +36,7 @@ async def negative_score(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # زمان‌بندی اولیه برای امتیاز منفی
 def schedule_initial_negative(job_queue):
-    delay = random.randint(300, 1200)  # زمان تصادفی بین 60 تا 1200 ثانیه
+    delay = random.randint(150, 1200)  # زمان تصادفی بین 60 تا 1200 ثانیه
     job_queue.run_once(random_negative_score, when=delay)
     logging.info(f"امتیازدهی منفی اولیه در {delay} ثانیه دیگر انجام خواهد شد")
 
