@@ -28,8 +28,8 @@ if __name__ == '__main__':
     app.add_handler(CommandHandler('start', positive.start, group=1))
     app.add_handler(CommandHandler('stop', positive.stop, group=1))
     # show user score only on exact "امتیاز"
-    app.add_handler(MessageHandler(filters.Regex(r'^امتیاز$'), positive.show_score))
-    app.add_handler(CommandHandler('logs', positive.show_logs))
+    app.add_handler(MessageHandler(filters.Regex(r'^امتیاز$'), positive.show_score, group=2))
+    app.add_handler(CommandHandler('logs', positive.show_logs, group=2))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, positive.capture_messages, group=2))
 
     # Negative handler
