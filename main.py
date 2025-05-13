@@ -1,10 +1,9 @@
-# main.py
-# Entry point: registers handlers and starts the bot
 import config
 import logging
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
 import positive
 import negative
+import leaderboard
 
 # Enable basic logging
 logging.basicConfig(
@@ -21,7 +20,7 @@ if __name__ == '__main__':
 
     app = ApplicationBuilder().token(token).build()
 
-    # Core handlers in positive module
+    # Positive module handlers
     app.add_handler(CommandHandler('start', positive.start))
     app.add_handler(CommandHandler('stop', positive.stop))
     app.add_handler(MessageHandler(filters.Regex(r'امتیاز'), positive.show_score))
@@ -30,6 +29,9 @@ if __name__ == '__main__':
 
     # Negative scoring handler
     app.add_handler(CommandHandler('negative', negative.negative_score))
+
+    # Leaderboard handler
+    app.add_handler(CommandHandler('leaderboard', leaderboard.show_leaderboard))
 
     app.add_error_handler(positive.error_handler)
 
