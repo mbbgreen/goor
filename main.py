@@ -1,3 +1,5 @@
+# main.py
+# Entry point: registers handlers and starts the bot
 import config
 import logging
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
@@ -25,7 +27,8 @@ if __name__ == '__main__':
     # Positive handlers
     app.add_handler(CommandHandler('start', positive.start))
     app.add_handler(CommandHandler('stop', positive.stop))
-    app.add_handler(MessageHandler(filters.Regex(r'امتیاز'), positive.show_score))
+    # show user score only on exact "امتیاز"
+    app.add_handler(MessageHandler(filters.Regex(r'^امتیاز$'), positive.show_score))
     app.add_handler(CommandHandler('logs', positive.show_logs))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, positive.capture_messages))
 
