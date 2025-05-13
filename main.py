@@ -1,16 +1,11 @@
 # main.py
 # Entry point: registers handlers and starts the bot
-import sys
-import os
-# Ensure current directory is in module search path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
 import config
 import logging
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
-import positive
-import negative
-import leaderboard
+
+# Import handler modules as a package
+from handlers import positive, negative, leaderboard
 
 # Enable basic logging
 logging.basicConfig(
@@ -37,8 +32,8 @@ if __name__ == '__main__':
     # Negative scoring handler
     app.add_handler(CommandHandler('negative', negative.negative_score))
 
-    # Leaderboard handler
-    app.add_handler(CommandHandler('leaderboard', leaderboard.show_leaderboard))
+    # Leaderboard text handler
+    app.add_handler(MessageHandler(filters.TEXT & filters.Regex(r'^لیست امتیاز$'), leaderboard.show_leaderboard))
 
     app.add_error_handler(positive.error_handler)
 
@@ -47,3 +42,16 @@ if __name__ == '__main__':
         positive.schedule_initial(app.job_queue)
 
     app.run_polling()
+
+# Make sure that your directory structure is:
+# project_root/
+# ├── main.py
+# ├── config.py
+# └── handlers/
+#     ├── __init__.py
+#     ├── positive.py
+#     ├── negative.py
+#     └── leaderboard.py
+
+# handlers/__init__.py
+# (empty or with initializations if needed)
