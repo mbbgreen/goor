@@ -36,7 +36,7 @@ async def negative_score(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # زمان‌بندی اولیه برای امتیاز منفی
 def schedule_initial_negative(job_queue):
-    delay = random.randint(150, 1200)  # زمان تصادفی بین 60 تا 1200 ثانیه
+    delay = random.randint(150, 1200)  # زمان تصادفی بین 150 تا 1200 ثانیه
     job_queue.run_once(random_negative_score, when=delay)
     logging.info(f"امتیازدهی منفی اولیه در {delay} ثانیه دیگر انجام خواهد شد")
 
@@ -65,7 +65,7 @@ async def random_negative_score(context: ContextTypes.DEFAULT_TYPE):
         logging.info('هیچ پیامی برای امتیازدهی منفی وجود ندارد')
     
     # زمان‌بندی اجرای بعدی
-    next_delay = random.randint(150, 1200)  # زمان تصادفی بین ۱۰ تا ۱۲۰۰ ثانیه
+    next_delay = random.randint(150, 1200)  # زمان تصادفی بین 150 تا 1200 ثانیه
     context.job_queue.run_once(random_negative_score, when=next_delay)
     logging.info(f"اجرای بعدی امتیاز منفی در {next_delay} ثانیه دیگر")
 
