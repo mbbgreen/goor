@@ -1,89 +1,82 @@
 import json
 import os
-from telegram import Update
-from telegram.ext import ContextTypes, MessageHandler, filters
+import logging
+from telegram.constants import ParseMode
 
-# مسیر فایل امتیازات
-SCORES_FILE = "data/scores.json"
+# Configure logging
+logger = logging.getLogger(__name__)
 
-# دیکشنری برای نگهداری امتیازات کاربران
-user_scores = {}
+async def check_admin_status(update, context):
+    """Check if the bot is admin in the group"""
+    if update.effective_chat.type in ['group', 'supergroup']:
+        bot_member = await context.bot.get_chat_member(update.effective_chat.id, context.bot.id)
+        if bot_member.status not in ['administrator', 'creator']:
+            logger.warning(f"Bot is not admin in chat {update.effective_chat.id}, leaderboard handler not functioning")
+            return False
+    return True
 
-# تابع برای خواندن لیست امتیازات از فایل
-def load_scores():
-    global user_scores
-    if os.path.exists(SCORES_FILE):
-        try:
-            with open(SCORES_FILE, "r", encoding="utf-8") as f:
-                user_scores = json.load(f)
-                return user_scores
-        except Exception as e:
-            print(f"خطا در خواندن فایل امتیازات: {e}")
-            return {}
-    
-    # اطمینان از وجود پوشه data
-    os.makedirs(os.path.dirname(SCORES_FILE), exist_ok=True)
-    return {}
-
-# تابع برای ذخیره امتیازات در فایل
-def save_scores():
-    try:
-        # اطمینان از وجود پوشه data
-        os.makedirs(os.path.dirname(SCORES_FILE), exist_ok=True)
-        with open(SCORES_FILE, "w", encoding="utf-8") as f:
-            json.dump(user_scores, f, ensure_ascii=False)
-    except Exception as e:
-        print(f"خطا در ذخیره‌سازی امتیازات: {e}")
-
-# تابع برای دریافت اطلاعات کاربر با استفاده از شناسه کاربر
-async def get_user_info(bot, user_id):
-    try:
-        chat_member = await bot.get_chat_member(chat_id=user_id, user_id=user_id)
-        user = chat_member.user
-        return {
-            'id': user.id,
-            'first_name': user.first_name,
-            'last_name': user.last_name if user.last_name else "",
-            'username': user.username if user.username else ""
-        }
-    except Exception as e:
-        print(f"خطا در دریافت اطلاعات کاربر {user_id}: {e}")
-        return None
-
-# تابع هندل پیام
-async def show_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not user_scores:
-        await update.message.reply_text("📭 هنوز هیچ امتیازی ثبت نشده.")
+async def leaderboard_handler(update, context):
+    """
+    Display the top 10 users with highest points in the group
+    """
+    # بررسی ادمین بودن ربات
+    if not await check_admin_status(update, context):
         return
-
-    # مرتب‌سازی امتیازها (بیشترین به کمترین)
-    sorted_scores = sorted(user_scores.items(), key=lambda x: x[1], reverse=True)
-    leaderboard_text = "🏆 لیست امتیازات:\n\n"
     
-    # حداکثر 10 نفر از لیست را نمایش می‌دهیم
-    top_users = sorted_scores[:10]
+    chat_id = str(update.effective_chat.id)
     
-    for i, (user_id, score) in enumerate(top_users, start=1):
-        try:
-            # دریافت اطلاعات کاربر از تلگرام
-            chat = await context.bot.get_chat(user_id)
-            user_name = chat.first_name
-            if chat.last_name:
-                user_name += f" {chat.last_name}"
-            if chat.username:
-                user_mention = f"<a href='tg://user?id={user_id}'>{user_name} (@{chat.username})</a>"
-            else:
-                user_mention = f"<a href='tg://user?id={user_id}'>{user_name}</a>"
-                
-        except Exception as e:
-            # اگر نتوانستیم اطلاعات کاربر را دریافت کنیم، از یک نام عمومی استفاده می‌کنیم
-            print(f"خطا در دریافت اطلاعات کاربر: {e}")
-            user_mention = f"<a href='tg://user?id={user_id}'>کاربر {user_id}</a>"
-            
-        leaderboard_text += f"{i}. {user_mention} — {score} امتیاز\n"
-
-    await update.message.reply_text(leaderboard_text, parse_mode="HTML")
-
-# تابع برای برگرداندن هندلر
-def get_leaderboard_handler():
-    return MessageHandler(filters.Regex(r'^لیست امتیاز$'), show_leaderboard)
+    # Load the score data
+    if not os.path.exists('score.json'):
+        await update.message.reply_text("هنوز هیچ عجر معنوی ثبت نشده است.")
+        logger.info(f"Leaderboard requested in chat {chat_id} but no score file exists")
+        return
+    
+    try:
+        with open('score.json', 'r', encoding='utf-8') as f:
+            scores = json.load(f)
+    except Exception as e:
+        logger.error(f"Error loading score file for leaderboard: {e}")
+        await update.message.reply_text("خطا در بارگذاری امتیازات. لطفاً بعداً دوباره امتحان کنید.")
+        return
+    
+    # Check if this chat has any scores
+    if chat_id not in scores or not scores[chat_id]:
+        await update.message.reply_text("هنوز هیچ عجر معنوی در این گروه ثبت نشده است.")
+        logger.info(f"Leaderboard requested in chat {chat_id} but no scores exist for this chat")
+        return
+    
+    # Get all users in this chat and sort them by points
+    users = []
+    for user_id, user_data in scores[chat_id].items():
+        users.append({
+            'id': user_id,
+            'name': user_data.get('name', 'کاربر ناشناس'),
+            'points': user_data.get('points', 0),
+            'messages': user_data.get('messages', 0)
+        })
+    
+    # Sort users by points (highest first)
+    users.sort(key=lambda x: x['points'], reverse=True)
+    
+    # Get top 10 users
+    top_users = users[:10]
+    
+    # Create leaderboard message
+    message = "🇮🇷 <b>لیدربورد عجر معنوی</b> 🇮🇷\n\n"
+    
+    for i, user in enumerate(top_users, 1):
+        # Add medal emoji for top 3
+        if i == 1:
+            medal = "🥇"
+        elif i == 2:
+            medal = "🥈"
+        elif i == 3:
+            medal = "🥉"
+        else:
+            medal = f"{i}."
+        
+        message += f"{medal} <b>{user['name']}</b>: {user['points']} عجر معنوی ({user['messages']} پیام)\n"
+    
+    # Send the leaderboard
+    await update.message.reply_text(message, parse_mode=ParseMode.HTML)
+    logger.info(f"Leaderboard sent in chat {chat_id}")
