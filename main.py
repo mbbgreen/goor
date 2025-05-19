@@ -99,14 +99,8 @@ def main():
 
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, score_handler_wrapper), group=5)
     
-    # Add activity update handler in group 6
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, update_activity), group=6)
-    
-    # Add slogan handler in group 7
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, slogan_handler), group=7)
-    
-    # Setup inactivity checker
-    setup_inactivity_checker(application)
+    # Add slogan handler in group 6
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, slogan_handler), group=6)
     
     # Start the Bot
     application.run_polling()
