@@ -11,7 +11,6 @@ from handlers.member import member_handler
 from handlers.leaderboard import leaderboard_handler
 from handlers.message import message_handler
 from handlers.score import score_handler
-from handlers.inactivity import update_activity, setup_inactivity_checker
 from handlers.slogan import slogan_handler  # اضافه کردن هندلر جدید
 
 # Configure logging
